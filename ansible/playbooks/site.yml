@@ -1,0 +1,16 @@
+---
+- name: Installing common OS pakadges and configration
+  hosts: localhost
+  become: true
+  roles: 
+    - common
+  tasks: 
+
+  - name: update apt pakage cashe
+    ansible.builtin.apt:
+      update_cache: true
+      cache_valid_time: 3600
+      
+  - name: import the common role
+    ansible.builtin.import_role:
+      name: common
