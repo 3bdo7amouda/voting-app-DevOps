@@ -1,48 +1,28 @@
 ---
-# 1. Install Git
+
+- name: Update apt cache
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+
 - name: Install Git
   ansible.builtin.apt:
     name: git
     state: present
-  when: docker_and_git_install_git
+  when: docker_and_git_install_git | default(true)
 
-# 2. Install Docker prerequisites
-- name: Install Docker prerequisites
+- name: Install Docker from Ubuntu repo
   ansible.builtin.apt:
     name:
-      - ca-certificates
-      - curl
-      - gnupg
-      - lsb-release
+      - docker.io
+      - docker-compose-v2
     state: present
 
-# 3. Add Docker GPG key
-- name: Add Docker GPG key
-  ansible.builtin.apt_key:
-    url: https://download.docker.com/linux/ubuntu/gpg
-    state: present
-
-# 4. Add Docker APT repository
-- name: Add Docker repository
-  ansible.builtin.apt_repository:
-    repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
-    state: present
-
-# 5. Install Docker engine and plugins
-- name: Install Docker packages
-  ansible.builtin.apt:
-    name: "{{ docker_packages }}"
-    state: present
-    update_cache: true
-
-# 6. Ensure Docker service is running
-- name: Ensure Docker service is enabled and running
-  ansible.builtin.service:
+- name: Ensure docker group exists
+  ansible.builtin.group:
     name: docker
-    state: started
-    enabled: true
+    state: present
 
-# 7. Add users to docker group
 - name: Add users to docker group
   ansible.builtin.user:
     name: "{{ item }}"
@@ -50,7 +30,12 @@
     append: true
   loop: "{{ docker_users }}"
 
-# 8. Configure Docker daemon
+- name: Ensure Docker service is enabled and running
+  ansible.builtin.service:
+    name: docker
+    state: started
+    enabled: true
+
 - name: Configure Docker daemon logging
   ansible.builtin.copy:
     dest: /etc/docker/daemon.json

@@ -1,20 +1,9 @@
 ---
-# Git
 docker_and_git_install_git: true
 
-# Docker users (who can run docker without sudo)
 docker_users:
   - devops
 
-# Docker packages to install
-docker_packages:
-  - docker-ce
-  - docker-ce-cli
-  - containerd.io
-  - docker-buildx-plugin
-  - docker-compose-plugin
-
-# Docker daemon logging configuration
 docker_log_driver: "json-file"
 docker_log_max_size: "10m"
 docker_log_max_file: "3"
