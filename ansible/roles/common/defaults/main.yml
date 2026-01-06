@@ -1,2 +1,28 @@
 ---
-# defaults file for roles/common
+# List of base packages required on all servers
+common_packages:
+  - curl
+  - wget
+  - git
+  - unzip
+  - ca-certificates
+  - gnupg
+  - software-properties-common
+  - jq
+  - python3-pip
+
+# Timezone for the system
+common_timezone: "UTC"
+
+# DevOps user configuration
+common_devops_user: "devops"
+common_devops_shell: "/bin/bash"
+
+# Whether to manage SSH for the devops user
+common_manage_ssh: true
+
+# Project directories to create
+common_directories:
+  - /opt/devops
+  - /var/log/devops
+  - /opt/healthchecks

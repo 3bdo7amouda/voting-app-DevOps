@@ -1,2 +1,66 @@
 ---
-# tasks file for roles/common
+# 1. Validate OS
+- name: Assert supported OS
+  ansible.builtin.assert:
+    that:
+      - ansible_facts['os_family'] == "Debian"
+      - ansible_facts['distribution'] == "Ubuntu"
+    fail_msg: "This role supports Ubuntu only"
+
+# 2. Update apt cache
+- name: Update apt cache
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+
+# 3. Install baseline packages
+- name: Install common system packages
+  ansible.builtin.apt:
+    name: "{{ common_packages }}"
+    state: present
+
+# 4. Create devops user
+- name: Ensure devops user exists
+  ansible.builtin.user:
+    name: "{{ common_devops_user }}"
+    shell: "{{ common_devops_shell }}"
+    create_home: true
+
+# 5. Grant sudo access
+- name: Add devops user to sudo group
+  ansible.builtin.user:
+    name: "{{ common_devops_user }}"
+    groups: sudo
+    append: true
+
+# 6. Prepare SSH directory
+- name: Create .ssh directory for devops user
+  ansible.builtin.file:
+    path: "/home/{{ common_devops_user }}/.ssh"
+    state: directory
+    owner: "{{ common_devops_user }}"
+    group: "{{ common_devops_user }}"
+    mode: "0700"
+  when: common_manage_ssh and (not ansible_check_mode)
+
+# 7. Ensure SSH service is running
+- name: Ensure SSH service is running
+  ansible.builtin.service:
+    name: ssh
+    state: started
+    enabled: true
+
+# 8. Set timezone
+- name: Set system timezone
+  ansible.builtin.timezone:
+    name: "{{ common_timezone }}"
+
+# 9. Create project directories
+- name: Create project directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ common_devops_user }}"
+    group: "{{ common_devops_user }}"
+    mode: "0755"
+  loop: "{{ common_directories }}"
