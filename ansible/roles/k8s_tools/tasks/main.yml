@@ -55,17 +55,23 @@
 - name: Validate local Kubernetes (start minikube and run kubectl checks)
   when: k8s_tools_validate | bool
   block:
+    - name: Fail if minikube_user is empty (to avoid running as root)
+      ansible.builtin.fail:
+        msg: "minikube_user is empty; set roles/k8s_tools:minikube_user to a non-root user (e.g. 'abdo')."
+      when: minikube_user | default('') | length == 0
+
     - name: Start minikube (idempotent)
-      ansible.builtin.command: "{{ minikube_install_path }} start --driver={{ minikube_driver }}"
-      become: true
-      become_user: "{{ minikube_user }}"
+      ansible.builtin.command: >
+        {{ minikube_install_path }} start
+        --driver={{ minikube_driver }}
+        {{ '--force' if (k8s_tools_minikube_force_as_root | bool) else '' }}
+      become: false
       register: minikube_start
       changed_when: "'Done!' in (minikube_start.stdout | default(''))"
 
-    - name: Ensure kubectl context is set to minikube
+    - name: Ensure kubectl can reach the cluster
       ansible.builtin.command: "{{ minikube_install_path }} kubectl -- get nodes"
-      become: true
-      become_user: "{{ minikube_user }}"
+      become: false
       register: kubectl_nodes
       changed_when: false
 

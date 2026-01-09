@@ -7,15 +7,18 @@ kubectl_version: "v1.29.0"
 k8s_tools_install_minikube: true
 minikube_version: "v1.33.1"
 
-# Driver configuration: docker
+# Driver configuration: docker (recommended for Ubuntu)
 minikube_driver: "docker"
 
 # If true, run `minikube start` (idempotent) and validate kubectl can reach the cluster
 k8s_tools_validate: true
 
-# Optional: allow running minikube as non-root user (the SSH user). Leave empty to skip.
-minikube_user: "{{ ansible_user | default(ansible_user_id) }}"
+# Run minikube as a non-root user (recommended). Override if needed.
+minikube_user: "{{ ansible_facts.user_id | default('') }}"
 
 # Where to install the binaries
 kubectl_install_path: /usr/local/bin/kubectl
 minikube_install_path: /usr/local/bin/minikube
+
+# If true, allow starting minikube with docker driver even when running as root (adds --force)
+k8s_tools_minikube_force_as_root: false
