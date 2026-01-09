@@ -1,2 +1,74 @@
 ---
 # tasks file for roles/k8s_tools
+
+- name: Ensure required packages are installed (curl, ca-certificates)
+  ansible.builtin.apt:
+    name:
+      - curl
+      - ca-certificates
+      - conntrack
+    state: present
+    update_cache: true
+
+- name: Install kubectl
+  when: k8s_tools_install_kubectl | bool
+  block:
+    - name: Download kubectl binary
+      ansible.builtin.get_url:
+        url: "https://dl.k8s.io/release/{{ kubectl_version }}/bin/linux/amd64/kubectl"
+        dest: "{{ kubectl_install_path }}"
+        mode: "0755"
+        owner: root
+        group: root
+
+    - name: Verify kubectl is installed
+      ansible.builtin.command: "{{ kubectl_install_path }} version --client=true --output=yaml"
+      register: kubectl_version_out
+      changed_when: false
+
+- name: Install minikube
+  when: k8s_tools_install_minikube | bool
+  block:
+    - name: Download minikube binary
+      ansible.builtin.get_url:
+        url: "https://storage.googleapis.com/minikube/releases/{{ minikube_version }}/minikube-linux-amd64"
+        dest: "{{ minikube_install_path }}"
+        mode: "0755"
+        owner: root
+        group: root
+
+    - name: Verify minikube is installed
+      ansible.builtin.command: "{{ minikube_install_path }} version"
+      register: minikube_version_out
+      changed_when: false
+
+- name: Configure minikube driver for user
+  when:
+    - minikube_user is defined
+    - minikube_user | length > 0
+  ansible.builtin.command: "{{ minikube_install_path }} config set driver {{ minikube_driver }}"
+  become: true
+  become_user: "{{ minikube_user }}"
+  register: minikube_driver_set
+  changed_when: "'These changes will take effect' in (minikube_driver_set.stdout | default('')) or 'set driver' in (minikube_driver_set.stdout | default(''))"
+
+- name: Validate local Kubernetes (start minikube and run kubectl checks)
+  when: k8s_tools_validate | bool
+  block:
+    - name: Start minikube (idempotent)
+      ansible.builtin.command: "{{ minikube_install_path }} start --driver={{ minikube_driver }}"
+      become: true
+      become_user: "{{ minikube_user }}"
+      register: minikube_start
+      changed_when: "'Done!' in (minikube_start.stdout | default(''))"
+
+    - name: Ensure kubectl context is set to minikube
+      ansible.builtin.command: "{{ minikube_install_path }} kubectl -- get nodes"
+      become: true
+      become_user: "{{ minikube_user }}"
+      register: kubectl_nodes
+      changed_when: false
+
+    - name: Show node list
+      ansible.builtin.debug:
+        var: kubectl_nodes.stdout_lines

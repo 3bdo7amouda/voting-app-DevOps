@@ -4,5 +4,5 @@
   become: true
   gather_facts: true
 
-  roles: 
-    - docker_and_git
+  roles:
+    - k8s_tools

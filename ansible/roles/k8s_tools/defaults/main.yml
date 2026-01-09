@@ -1,2 +1,21 @@
 ---
-# defaults file for roles/k8s_tools
+# Kubectl
+k8s_tools_install_kubectl: true
+kubectl_version: "v1.29.0"
+
+# Minikube
+k8s_tools_install_minikube: true
+minikube_version: "v1.33.1"
+
+# Driver configuration: docker
+minikube_driver: "docker"
+
+# If true, run `minikube start` (idempotent) and validate kubectl can reach the cluster
+k8s_tools_validate: true
+
+# Optional: allow running minikube as non-root user (the SSH user). Leave empty to skip.
+minikube_user: "{{ ansible_user | default(ansible_user_id) }}"
+
+# Where to install the binaries
+kubectl_install_path: /usr/local/bin/kubectl
+minikube_install_path: /usr/local/bin/minikube
