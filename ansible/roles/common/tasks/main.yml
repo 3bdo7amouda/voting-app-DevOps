@@ -51,9 +51,14 @@
     enabled: true
 
 # 8. Set timezone
-- name: Set system timezone
-  ansible.builtin.timezone:
-    name: "{{ common_timezone }}"
+- name: Ensure tzdata is installed
+  ansible.builtin.apt:
+    name: tzdata
+    state: present
+
+- name: Set system timezone (timedatectl)
+  ansible.builtin.command: "timedatectl set-timezone {{ common_timezone }}"
+  changed_when: true
 
 # 9. Create project directories
 - name: Create project directories
