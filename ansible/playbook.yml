@@ -5,4 +5,7 @@
   gather_facts: true
 
   roles:
+    - common
+    - docker_and_git
+    - k8s_tools
     - aws_tools
