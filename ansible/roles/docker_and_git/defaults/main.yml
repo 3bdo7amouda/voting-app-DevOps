@@ -2,7 +2,7 @@
 docker_and_git_install_git: true
 
 docker_users:
-  - devops
+  - "{{ ansible_user | default(ansible_user_id) }}"
 
 docker_log_driver: "json-file"
 docker_log_max_size: "10m"
