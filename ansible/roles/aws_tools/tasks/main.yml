@@ -1,12 +1,56 @@
 ---
 # tasks file for roles/aws_tools
 
-- name: Install AWS CLI (Ubuntu package)
+- name: Ensure required packages are installed (curl, unzip)
   when: aws_tools_install_cli | bool
   ansible.builtin.apt:
-    name: awscli
+    name:
+      - curl
+      - unzip
     state: present
     update_cache: true
+
+- name: Check if AWS CLI is already installed
+  ansible.builtin.command: "{{ awscli_v2_bin_dir }}/aws --version"
+  register: awscli_version_check
+  changed_when: false
+  failed_when: false
+
+- name: Install AWS CLI v2 (official installer)
+  when:
+    - aws_tools_install_cli | bool
+    - awscli_version_check.rc != 0
+  block:
+    - name: Create temp directory for AWS CLI installer
+      ansible.builtin.tempfile:
+        state: directory
+        suffix: awscli
+      register: awscli_tmp
+
+    - name: Download AWS CLI v2 zip
+      ansible.builtin.get_url:
+        url: "https://awscli.amazonaws.com/awscli-exe-linux-{{ awscli_v2_arch }}-{{ awscli_v2_version }}.zip"
+        dest: "{{ awscli_tmp.path }}/awscliv2.zip"
+        mode: "0644"
+
+    - name: Unzip AWS CLI v2
+      ansible.builtin.unarchive:
+        src: "{{ awscli_tmp.path }}/awscliv2.zip"
+        dest: "{{ awscli_tmp.path }}"
+        remote_src: true
+
+    - name: Run AWS CLI installer
+      ansible.builtin.command: >
+        {{ awscli_tmp.path }}/aws/install
+        --install-dir {{ awscli_v2_install_dir }}
+        --bin-dir {{ awscli_v2_bin_dir }}
+      register: awscli_install
+      changed_when: awscli_install.rc == 0
+
+    - name: Cleanup temp directory
+      ansible.builtin.file:
+        path: "{{ awscli_tmp.path }}"
+        state: absent
 
 - name: Ensure AWS config directory exists
   when:
