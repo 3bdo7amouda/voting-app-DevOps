@@ -1,0 +1,24 @@
+---
+- name: Set profile region
+  when: aws_profile.region is defined
+  community.general.ini_file:
+    path: "/home/{{ aws_user }}/.aws/config"
+    section: "{{ 'default' if aws_profile.name == 'default' else 'profile ' ~ aws_profile.name }}"
+    option: region
+    value: "{{ aws_profile.region }}"
+    owner: "{{ aws_user }}"
+    group: "{{ aws_user }}"
+    mode: "0600"
+    create: true
+
+- name: Set profile output
+  when: aws_profile.output is defined
+  community.general.ini_file:
+    path: "/home/{{ aws_user }}/.aws/config"
+    section: "{{ 'default' if aws_profile.name == 'default' else 'profile ' ~ aws_profile.name }}"
+    option: output
+    value: "{{ aws_profile.output }}"
+    owner: "{{ aws_user }}"
+    group: "{{ aws_user }}"
+    mode: "0600"
+    create: true

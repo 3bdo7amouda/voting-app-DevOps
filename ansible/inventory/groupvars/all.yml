@@ -1,0 +1,11 @@
+---
+minikube_user: "abdo"
+
+aws_user: "abdo"
+
+aws_profiles:
+  - name: default
+    region: us-east-1
+    output: json
+
+aws_write_credentials: false
