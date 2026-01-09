@@ -5,4 +5,4 @@
   gather_facts: true
 
   roles:
-    - k8s_tools
+    - aws_tools

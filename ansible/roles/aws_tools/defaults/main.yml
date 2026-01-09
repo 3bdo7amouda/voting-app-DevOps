@@ -1,2 +1,22 @@
 ---
 # defaults file for roles/aws_tools
+
+# Install AWS CLI v2
+aws_tools_install_cli: true
+
+# Target user to write ~/.aws/{config,credentials} for.
+# Default to the user Ansible connects as.
+aws_user: "{{ ansible_facts.user_id | default('') }}"
+
+# Optional: configure AWS profiles. Leave empty to skip.
+# Example:
+# aws_profiles:
+#   - name: dev
+#     region: us-east-1
+#     output: json
+#     access_key_id: "{{ vault_aws_access_key_id }}"
+#     secret_access_key: "{{ vault_aws_secret_access_key }}"
+aws_profiles: []
+
+# If true, create credentials file entries when keys are provided
+aws_write_credentials: true
